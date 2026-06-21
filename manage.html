@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Your Booking — BidElevate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#3e554f;
+    --green-deep:#2c3e39;
+    --sage:#dde6e1;
+    --sage-soft:#eef2ef;
+    --ink:#26302d;
+    --ink-soft:#5c6864;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:#ffffff;
+    color:var(--ink);
+    font-family:'DM Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1{ font-family:'DM Sans', sans-serif; font-weight:600; color:var(--green-deep); margin:0; font-size:26px; }
+  .wrap{ max-width:520px; margin:0 auto; padding:48px 24px 80px; }
+  .brandbar{ display:flex; align-items:center; gap:10px; margin-bottom:40px; }
+  .brandbar img{ height:32px; }
+
+  .card{
+    background:#fff;
+    border:1px solid var(--sage);
+    border-radius:14px;
+    padding:28px;
+  }
+
+  .eyebrow{
+    font-size:12.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--green);
+    font-weight:600;
+    margin-bottom:14px;
+    display:block;
+  }
+
+  .detail-row{
+    margin-top:18px;
+    padding-top:18px;
+    border-top:1px solid var(--sage);
+    font-size:15px;
+    line-height:1.6;
+  }
+  .detail-row strong{ color:var(--green-deep); }
+
+  .btn{
+    width:100%;
+    padding:13px;
+    border-radius:10px;
+    border:1px solid var(--sage);
+    font-family:'DM Sans', sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+    margin-top:12px;
+    transition:all .15s ease;
+  }
+  .btn-cancel{ background:#fff; color:#b3554a; border-color:#e3c5bf; }
+  .btn-cancel:hover{ background:#fbf1ef; }
+  .btn-reschedule{ background:var(--green); color:#fff; border:none; }
+  .btn-reschedule:hover{ background:var(--green-deep); }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  .msg{ font-size:14px; color:var(--ink-soft); margin-top:16px; line-height:1.6; }
+  .msg.error{ color:#b3554a; }
+  .msg.success{ color:var(--green); font-weight:600; }
+
+  .confirm-box{
+    margin-top:16px;
+    padding:14px;
+    border-radius:10px;
+    background:var(--sage-soft);
+    font-size:13.5px;
+    line-height:1.6;
+    display:none;
+  }
+  .confirm-box .confirm-actions{ display:flex; gap:10px; margin-top:10px; }
+  .confirm-box button{
+    flex:1;
+    padding:9px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    border:1px solid var(--sage);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="brandbar">
+    <img src="https://bidelevate.co.uk/wp-content/uploads/2026/05/BidElevate-Logo.png" alt="BidElevate">
+  </div>
+
+  <div class="card">
+    <span class="eyebrow">Manage Your Booking</span>
+    <h1 id="heading">Loading your booking…</h1>
+
+    <div id="detailArea"></div>
+    <div id="actionArea"></div>
+
+    <div class="confirm-box" id="cancelConfirmBox">
+      Are you sure you'd like to cancel this call? This can't be undone.
+      <div class="confirm-actions">
+        <button id="cancelYes" style="background:#b3554a; color:#fff; border:none;">Yes, cancel it</button>
+        <button id="cancelNo" style="background:#fff;">Go back</button>
+      </div>
+    </div>
+
+    <div class="msg" id="statusMsg"></div>
+  </div>
+</div>
+
+<script>
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyaTN5enutD9yI72Pl1IVvEXToXpyM2efUdwnurv7f4PaP3fE68M35jYxNim3As7sgO/exec';
+
+  const CALL_TYPE_INFO = {
+    discovery:        { label: 'Discovery Call',           pageUrl: 'https://book.bidelevate.co.uk/' },
+    kickoff:          { label: 'Kickoff Call',             pageUrl: 'https://bidelevate.github.io/BidElevate-Internal-Booking/kickoff.html' },
+    serviceReview:    { label: 'Service Review Call',      pageUrl: 'https://bidelevate.github.io/BidElevate-Internal-Booking/service-review.html' },
+    postOnboarding:   { label: 'Post-Onboarding Call',     pageUrl: 'https://bidelevate.github.io/BidElevate-Internal-Booking/post-onboarding.html' },
+    interview:        { label: 'Interview Call',           pageUrl: 'https://bidelevate.github.io/BidElevate-Internal-Booking/interview.html' },
+    finalDraftReview: { label: 'Final Draft Review Call',  pageUrl: 'https://bidelevate.github.io/BidElevate-Internal-Booking/final-draft-review.html' }
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const eventId = params.get('event');
+  const callType = params.get('type') || 'discovery';
+  const info = CALL_TYPE_INFO[callType] || CALL_TYPE_INFO.discovery;
+
+  const heading = document.getElementById('heading');
+  const detailArea = document.getElementById('detailArea');
+  const actionArea = document.getElementById('actionArea');
+  const statusMsg = document.getElementById('statusMsg');
+  const cancelConfirmBox = document.getElementById('cancelConfirmBox');
+
+  async function loadBooking(){
+    if(!eventId){
+      heading.textContent = "We couldn't find that booking";
+      statusMsg.textContent = "This link looks incomplete. Please use the link from your confirmation email, or contact us directly.";
+      statusMsg.className = 'msg error';
+      return;
+    }
+    try{
+      const res = await fetch(`${APPS_SCRIPT_URL}?action=getBooking&eventId=${encodeURIComponent(eventId)}`);
+      const data = await res.json();
+
+      if(!data.found){
+        heading.textContent = "We couldn't find that booking";
+        statusMsg.textContent = data.error || "It may already have been cancelled.";
+        statusMsg.className = 'msg error';
+        return;
+      }
+
+      heading.textContent = `Your ${info.label}`;
+      detailArea.innerHTML = `<div class="detail-row"><strong>${data.dateLabel}</strong> at <strong>${data.timeLabel}</strong></div>`;
+      actionArea.innerHTML = `
+        <button class="btn btn-reschedule" id="rescheduleBtn">Reschedule</button>
+        <button class="btn btn-cancel" id="cancelBtn">Cancel this call</button>
+      `;
+      document.getElementById('cancelBtn').onclick = () => {
+        cancelConfirmBox.style.display = 'block';
+      };
+      document.getElementById('rescheduleBtn').onclick = () => doCancel(true);
+
+    }catch(err){
+      heading.textContent = "Something went wrong";
+      statusMsg.textContent = "Please try again, or contact us directly.";
+      statusMsg.className = 'msg error';
+      console.error(err);
+    }
+  }
+
+  async function doCancel(isReschedule){
+    statusMsg.textContent = '';
+    statusMsg.className = 'msg';
+    try{
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'cancel', eventId })
+      });
+      const data = await res.json();
+
+      if(!data.success){
+        statusMsg.textContent = data.error || "Couldn't process that — please try again or contact us directly.";
+        statusMsg.className = 'msg error';
+        return;
+      }
+
+      if(isReschedule){
+        window.location.href = info.pageUrl;
+      } else {
+        heading.textContent = "Booking cancelled";
+        detailArea.innerHTML = '';
+        actionArea.innerHTML = '';
+        cancelConfirmBox.style.display = 'none';
+        statusMsg.textContent = "Your call has been cancelled. If you'd like to book another time, just use the original booking link again.";
+        statusMsg.className = 'msg success';
+      }
+    }catch(err){
+      statusMsg.textContent = "Something went wrong — please try again or contact us directly.";
+      statusMsg.className = 'msg error';
+      console.error(err);
+    }
+  }
+
+  document.getElementById('cancelYes').onclick = () => doCancel(false);
+  document.getElementById('cancelNo').onclick = () => { cancelConfirmBox.style.display = 'none'; };
+
+  loadBooking();
+</script>
+
+</body>
+</html>
