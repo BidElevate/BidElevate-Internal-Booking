@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book your Post-Onboarding Call — BidElevate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#3e554f;
+    --green-deep:#2c3e39;
+    --sage:#dde6e1;
+    --sage-soft:#eef2ef;
+    --cream:#ffffff;
+    --ink:#26302d;
+    --ink-soft:#5c6864;
+    --gold:#b98b4e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'DM Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Lora', serif;
+    margin:0;
+    color:var(--green-deep);
+  }
+  .wrap{
+    max-width:980px;
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+
+  /* header / signature element */
+  .brandbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:40px;
+  }
+  .brandbar svg{ width:30px; height:30px; flex-shrink:0; }
+  .brandbar span{
+    font-family:'Lora', serif;
+    font-weight:600;
+    font-size:18px;
+    color:var(--green-deep);
+    letter-spacing:0.01em;
+  }
+
+  .hero{
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+    gap:48px;
+    align-items:start;
+  }
+  @media (max-width:760px){
+    .hero{ grid-template-columns:1fr; gap:36px; }
+  }
+
+  .eyebrow{
+    font-size:12.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--green);
+    font-weight:600;
+    margin-bottom:14px;
+    display:block;
+  }
+  .hero h1{
+    font-family:'DM Sans', sans-serif;
+    font-size:32px;
+    line-height:1.25;
+    font-style:normal;
+    font-weight:600;
+    color:var(--green-deep);
+  }
+  .hero p.lead{
+    margin-top:18px;
+    font-size:15.5px;
+    line-height:1.7;
+    color:var(--ink-soft);
+    max-width:46ch;
+  }
+
+  .meta-row{
+    display:flex;
+    gap:22px;
+    margin-top:28px;
+    flex-wrap:wrap;
+  }
+  .meta-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13.5px;
+    color:var(--ink-soft);
+  }
+  .meta-item svg{ width:16px; height:16px; stroke:var(--green); flex-shrink:0; }
+
+  .covers{
+    margin-top:34px;
+    padding-top:26px;
+    border-top:1px solid var(--sage);
+  }
+  .covers h3{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+    font-family:'DM Sans', sans-serif;
+    font-weight:600;
+    margin-bottom:14px;
+  }
+  .covers ul{ margin:0; padding:0; list-style:none; }
+  .covers li{
+    display:flex;
+    gap:10px;
+    font-size:14.5px;
+    line-height:1.6;
+    color:var(--ink);
+    margin-bottom:10px;
+  }
+  .covers li svg{ width:15px; height:15px; stroke:var(--green); margin-top:3px; flex-shrink:0; }
+
+  /* booking card */
+  .card{
+    background:#fff;
+    border:1px solid var(--sage);
+    border-radius:14px;
+    padding:28px;
+  }
+  .card h2{
+    font-size:19px;
+    font-weight:600;
+    font-style:italic;
+  }
+  .card .sub{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+
+  .step{ margin-top:24px; }
+  .step-label{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-bottom:10px;
+  }
+
+  .days{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:4px;
+  }
+  .day-btn{
+    flex:0 0 auto;
+    width:58px;
+    padding:10px 4px;
+    border-radius:10px;
+    border:1px solid var(--sage);
+    background:var(--sage-soft);
+    text-align:center;
+    cursor:pointer;
+    font-family:'DM Sans', sans-serif;
+    transition:all .15s ease;
+  }
+  .day-btn .dow{ font-size:11px; color:var(--ink-soft); display:block; }
+  .day-btn .num{ font-size:16px; font-weight:600; color:var(--ink); display:block; margin-top:2px; }
+  .day-btn:hover{ border-color:var(--green); }
+  .day-btn.active{
+    background:var(--green);
+    border-color:var(--green);
+  }
+  .day-btn.active .dow, .day-btn.active .num{ color:#fff; }
+
+  .slots{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+    margin-top:14px;
+  }
+  @media (max-width:420px){ .slots{ grid-template-columns:repeat(2, 1fr); } }
+  .slot-btn{
+    padding:10px 6px;
+    border-radius:9px;
+    border:1px solid var(--sage);
+    background:#fff;
+    font-family:'DM Sans', sans-serif;
+    font-size:13.5px;
+    color:var(--ink);
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .slot-btn:hover{ border-color:var(--green); background:var(--sage-soft); }
+  .slot-btn.selected{
+    background:var(--green);
+    border-color:var(--green);
+    color:#fff;
+  }
+
+  .form-grid{ display:grid; gap:12px; margin-top:18px; }
+  .form-grid input, .form-grid textarea, .form-grid select{
+    width:100%;
+    padding:11px 13px;
+    border:1px solid var(--sage);
+    border-radius:9px;
+    font-family:'DM Sans', sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    background:var(--sage-soft);
+  }
+  .form-grid select{
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c6864' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    background-size:16px;
+    padding-right:36px;
+    cursor:pointer;
+  }
+  .form-grid select:invalid, .form-grid select option[value=""]{ color:var(--ink-soft); }
+  .form-grid input:focus, .form-grid textarea:focus, .form-grid select:focus{
+    outline:none;
+    border-color:var(--green);
+    background:#fff;
+  }
+  .form-grid textarea{ resize:vertical; min-height:64px; }
+
+  .confirm-btn{
+    margin-top:20px;
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    border:none;
+    background:var(--green);
+    color:#fff;
+    font-family:'DM Sans', sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .confirm-btn:hover{ background:var(--green-deep); }
+  .confirm-btn:disabled{
+    background:#c8d0cd;
+    cursor:not-allowed;
+  }
+
+  .footnote{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:16px;
+  }
+
+  /* confirmed state */
+  .confirmed{
+    display:none;
+    text-align:center;
+    padding:20px 4px;
+  }
+  .confirmed svg{ width:46px; height:46px; stroke:var(--green); margin-bottom:14px; }
+  .confirmed h2{ font-size:20px; }
+  .confirmed p{ font-size:14px; color:var(--ink-soft); margin-top:10px; line-height:1.6; }
+
+  .mock-badge{
+    position:fixed;
+    bottom:18px;
+    right:18px;
+    background:var(--green-deep);
+    color:#fff;
+    font-size:11px;
+    padding:7px 12px;
+    border-radius:20px;
+    font-family:'DM Sans', sans-serif;
+    opacity:0.85;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="brandbar">
+    <img src="https://bidelevate.co.uk/wp-content/uploads/2026/05/BidElevate-Logo.png" alt="BidElevate" style="height:36px; width:auto;">
+  </div>
+
+  <div class="hero">
+    <div>
+      <span class="eyebrow">Post-Onboarding Call</span>
+      <h1>Book your Post-Onboarding Call</h1>
+      <p class="lead">A 60-minute check-in once you're set up with us, to confirm everything's in place and answer any questions.</p>
+
+      <div class="meta-row">
+        <div class="meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>
+          60 minutes
+        </div>
+        <div class="meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke-linecap="round"/></svg>
+          Video call
+        </div>
+      </div>
+
+      </div>
+    </div>
+
+    <div class="card">
+
+      <div id="bookingFlow">
+        <h2>Pick a time</h2>
+        <div class="sub">All times shown in your local timezone</div>
+
+        <div class="step">
+          <div class="step-label">Day</div>
+          <div class="days" id="dayRow"></div>
+        </div>
+
+        <div class="step">
+          <div class="step-label">Available slots</div>
+          <div class="slots" id="slotRow"></div>
+        </div>
+
+        <div class="step" id="detailsStep" style="display:none;">
+          <div class="step-label">Your details</div>
+          <div class="form-grid">
+            <input type="text" id="nameInput" placeholder="Full name">
+            <input type="text" id="orgInput" placeholder="Organisation">
+            <input type="email" id="emailInput" placeholder="Email address">
+            <textarea id="notesInput" placeholder="Anything you'd like us to cover on the call (optional)"></textarea>
+          </div>
+          <button class="confirm-btn" id="confirmBtn">Confirm Post-Onboarding Call</button>
+          <div class="footnote">You'll receive a calendar invite and confirmation email immediately.</div>
+        </div>
+      </div>
+
+      <div class="confirmed" id="confirmedState">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h2>Your Post-Onboarding Call is confirmed</h2>
+        <p id="confirmSummary"></p>
+        <p>Thank you for booking — we're looking forward to speaking with you.</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyaTN5enutD9yI72Pl1IVvEXToXpyM2efUdwnurv7f4PaP3fE68M35jYxNim3As7sgO/exec';
+  const CALL_TYPE = 'postOnboarding';
+
+  // Pre-fill from URL, e.g. kickoff.html?name=Jane%20Smith&email=jane@example.com&org=Example%20Care
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('name')) document.getElementById('nameInput').value = params.get('name');
+  if(params.get('email')) document.getElementById('emailInput').value = params.get('email');
+  if(params.get('org')) document.getElementById('orgInput').value = params.get('org');
+
+  const dayRow = document.getElementById('dayRow');
+  const slotRow = document.getElementById('slotRow');
+  const detailsStep = document.getElementById('detailsStep');
+  const confirmBtn = document.getElementById('confirmBtn');
+
+  let availableDays = []; // [{ date, dayLabel, slots: ['09:00', ...] }]
+  let selectedDayIdx = 0;
+  let selectedSlot = null;
+
+  function time24To12(t){
+    const [h, m] = t.split(':').map(Number);
+    const period = h >= 12 ? 'pm' : 'am';
+    let hour = h % 12;
+    if(hour === 0) hour = 12;
+    return `${hour}:${String(m).padStart(2,'0')}${period}`;
+  }
+
+  async function loadAvailability(){
+    dayRow.innerHTML = '<div style="font-size:13px; color:var(--ink-soft); padding:8px 0;">Loading available days…</div>';
+    slotRow.innerHTML = '';
+    try{
+      const res = await fetch(`${APPS_SCRIPT_URL}?action=availability&callType=${CALL_TYPE}&days=14`);
+      const data = await res.json();
+      if(data.error){ throw new Error(data.error); }
+      availableDays = data.days || [];
+      selectedDayIdx = 0;
+      selectedSlot = null;
+      renderDays();
+      renderSlots();
+    }catch(err){
+      dayRow.innerHTML = `<div style="font-size:13px; color:#b3554a;">Couldn't load availability right now. Please refresh, or contact us directly.</div>`;
+      console.error(err);
+    }
+  }
+
+  function renderDays(){
+    dayRow.innerHTML = '';
+    if(availableDays.length === 0){
+      dayRow.innerHTML = '<div style="font-size:13px; color:var(--ink-soft);">No available days found in the next two weeks.</div>';
+      return;
+    }
+    availableDays.forEach((day, i)=>{
+      const [dow, num] = day.dayLabel.split(' ');
+      const btn = document.createElement('div');
+      btn.className = 'day-btn' + (i===selectedDayIdx ? ' active':'');
+      btn.innerHTML = `<span class="dow">${dow}</span><span class="num">${num}</span>`;
+      btn.onclick = () => { selectedDayIdx = i; selectedSlot = null; renderDays(); renderSlots(); detailsStep.style.display='none'; };
+      dayRow.appendChild(btn);
+    });
+  }
+
+  function renderSlots(){
+    slotRow.innerHTML = '';
+    const day = availableDays[selectedDayIdx];
+    if(!day) return;
+    day.slots.forEach(time=>{
+      const btn = document.createElement('div');
+      btn.className = 'slot-btn' + (time===selectedSlot ? ' selected':'');
+      btn.textContent = time24To12(time);
+      btn.onclick = () => {
+        selectedSlot = time;
+        renderSlots();
+        detailsStep.style.display = 'block';
+      };
+      slotRow.appendChild(btn);
+    });
+  }
+
+  loadAvailability();
+
+  confirmBtn.onclick = async () => {
+    const name = document.getElementById('nameInput').value.trim();
+    const email = document.getElementById('emailInput').value.trim();
+    const organisation = document.getElementById('orgInput').value.trim();
+    const notes = document.getElementById('notesInput').value.trim();
+
+    if(!name || !email){
+      alert('Please add your name and email so we can confirm the call.');
+      return;
+    }
+    if(!selectedSlot){
+      alert('Please choose a time slot first.');
+      return;
+    }
+
+    const day = availableDays[selectedDayIdx];
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Confirming…';
+
+    try{
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight
+        body: JSON.stringify({
+          action: 'book',
+          callType: CALL_TYPE,
+          date: day.date,
+          time: selectedSlot,
+          name, email, organisation, notes
+        })
+      });
+      const data = await res.json();
+
+      if(!data.success){
+        alert(data.error || "That slot couldn't be booked — please choose another.");
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Confirm Post-Onboarding Call';
+        loadAvailability(); // refresh in case the slot was just taken
+        return;
+      }
+
+      document.getElementById('confirmSummary').textContent = `${data.dateLabel} at ${time24To12(data.timeLabel)}`;
+      document.getElementById('bookingFlow').style.display = 'none';
+      document.getElementById('confirmedState').style.display = 'block';
+
+      // Next step: trigger EmailJS here to send the alert to BidElevate
+      // and the confirmation to the client.
+
+    }catch(err){
+      alert("Something went wrong confirming your call. Please try again.");
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Confirm Post-Onboarding Call';
+      console.error(err);
+    }
+  };
+</script>
+
+</body>
+</html>
