@@ -360,6 +360,7 @@
         <h2>Your Discovery Call is confirmed</h2>
         <p id="confirmSummary"></p>
         <p>Thank you for booking — we're looking forward to speaking with you.</p>
+        <p id="manageLinkWrap" style="margin-top:14px; font-size:13px;"></p>
       </div>
 
     </div>
@@ -488,6 +489,9 @@
       document.getElementById('confirmSummary').textContent = `${data.dateLabel} at ${time24To12(data.timeLabel)}`;
       document.getElementById('bookingFlow').style.display = 'none';
       document.getElementById('confirmedState').style.display = 'block';
+
+      const manageLink = `https://bidelevate.github.io/BidElevate-Internal-Booking/manage.html?event=${encodeURIComponent(data.eventId)}&type=${CALL_TYPE}`;
+      document.getElementById('manageLinkWrap').innerHTML = `<a href="${manageLink}" style="color:var(--green); font-weight:600; text-decoration:underline;" target="_blank">Manage this booking</a>`;
 
       // Next step: trigger EmailJS here to send the alert to BidElevate
       // and the confirmation to the client.
