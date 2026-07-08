@@ -6,6 +6,7 @@
 <title>Book a Discovery Call — BidElevate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root{
     --green:#3e554f;
@@ -372,12 +373,17 @@
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyaTN5enutD9yI72Pl1IVvEXToXpyM2efUdwnurv7f4PaP3fE68M35jYxNim3As7sgO/exec';
   const CALL_TYPE = 'discovery';
 
+  // ── EmailJS ──
+  emailjs.init('ZxayBeLVQRYJoLquJ');
+  const EMAILJS_SERVICE_ID  = 'service_yf3sg5y';
+  const EMAILJS_TEMPLATE_ID = 'template_gij9q7g';
+
   const dayRow = document.getElementById('dayRow');
   const slotRow = document.getElementById('slotRow');
   const detailsStep = document.getElementById('detailsStep');
   const confirmBtn = document.getElementById('confirmBtn');
 
-  let availableDays = []; // [{ date, dayLabel, slots: ['09:00', ...] }]
+  let availableDays = [];
   let selectedDayIdx = 0;
   let selectedSlot = null;
 
@@ -467,7 +473,7 @@
     try{
       const res = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action: 'book',
           callType: CALL_TYPE,
@@ -482,7 +488,7 @@
         alert(data.error || "That slot couldn't be booked — please choose another.");
         confirmBtn.disabled = false;
         confirmBtn.textContent = 'Confirm Discovery Call';
-        loadAvailability(); // refresh in case the slot was just taken
+        loadAvailability();
         return;
       }
 
@@ -493,8 +499,16 @@
       const manageLink = `https://bidelevate.github.io/BidElevate-Internal-Booking/manage.html?event=${encodeURIComponent(data.eventId)}&type=${CALL_TYPE}`;
       document.getElementById('manageLinkWrap').innerHTML = `<a href="${manageLink}" style="color:var(--green); font-weight:600; text-decoration:underline;" target="_blank">Manage this booking</a>`;
 
-      // Next step: trigger EmailJS here to send the alert to BidElevate
-      // and the confirmation to the client.
+      // ── Send EmailJS confirmation to client ──
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email:        email,
+        name:            name,
+        date:            data.dateLabel,
+        time:            time24To12(data.timeLabel),
+        meet_link:       data.meetLink || 'See your calendar invite',
+        cancel_link:     manageLink,
+        reschedule_link: manageLink
+      }).catch(err => console.error('EmailJS error:', err));
 
     }catch(err){
       alert("Something went wrong confirming your call. Please try again.");
