@@ -183,45 +183,73 @@
     }
   }
 
-  // NOTE: this now calls the "cancel" action via GET (query string), not POST.
-  // POST responses from this Apps Script web app go through an internal
-  // redirect that the browser can't read cross-origin — which was silently
-  // breaking this button: the booking WAS being cancelled on the backend,
-  // but the page could never see the success response, so it always showed
-  // an error. GET requests (like the getBooking call above) don't have this
-  // problem, so cancel/reschedule now uses the same reliable pattern.
+  function wait(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+
+  // Cancel/reschedule uses GET (query string), which is far more reliable
+  // than POST for this Apps Script web app — but the connection can still
+  // occasionally fail to hand back a readable response even though the
+  // cancellation genuinely went through on the backend. Rather than show
+  // an error the moment that happens, this now (1) quietly retries a
+  // couple of times, and (2) if every attempt still fails to respond,
+  // double-checks via getBooking whether the event is actually gone before
+  // ever telling the person something went wrong — so a real backend
+  // success no longer gets reported as a failure.
+  async function attemptCancel(){
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=cancel&eventId=${encodeURIComponent(eventId)}`);
+    return await res.json();
+  }
+
   async function doCancel(isReschedule){
     statusMsg.textContent = '';
     statusMsg.className = 'msg';
     const btns = actionArea.querySelectorAll('button');
     btns.forEach(b => b.disabled = true);
 
-    try{
-      const res = await fetch(`${APPS_SCRIPT_URL}?action=cancel&eventId=${encodeURIComponent(eventId)}`);
-      const data = await res.json();
+    const MAX_ATTEMPTS = 3;
+    let lastData = null;
 
-      if(!data.success){
-        statusMsg.textContent = data.error || "Couldn't process that — please try again or contact us directly.";
-        statusMsg.className = 'msg error';
-        btns.forEach(b => b.disabled = false);
-        return;
+    for(let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++){
+      try{
+        lastData = await attemptCancel();
+        break; // got a real response, no need to retry
+      }catch(err){
+        console.error(`Cancel attempt ${attempt} failed to read a response:`, err);
+        if(attempt < MAX_ATTEMPTS){
+          await wait(1000);
+        }
       }
+    }
 
-      if(isReschedule){
-        window.location.href = info.pageUrl;
-      } else {
-        heading.textContent = "Booking cancelled";
-        detailArea.innerHTML = '';
-        actionArea.innerHTML = '';
-        cancelConfirmBox.style.display = 'none';
-        statusMsg.textContent = "Your call has been cancelled. If you'd like to book another time, just use the original booking link again.";
-        statusMsg.className = 'msg success';
+    if(!lastData){
+      // Every attempt failed to read a response — check whether it actually
+      // went through anyway before reporting an error.
+      try{
+        const check = await fetch(`${APPS_SCRIPT_URL}?action=getBooking&eventId=${encodeURIComponent(eventId)}`);
+        const checkData = await check.json();
+        if(!checkData.found){
+          lastData = { success: true }; // it's gone — the cancel did work
+        }
+      }catch(err){
+        console.error('Verification check also failed:', err);
       }
-    }catch(err){
-      statusMsg.textContent = "Something went wrong — please try again or contact us directly.";
+    }
+
+    if(!lastData || !lastData.success){
+      statusMsg.textContent = (lastData && lastData.error) || "Couldn't process that — please try again or contact us directly.";
       statusMsg.className = 'msg error';
       btns.forEach(b => b.disabled = false);
-      console.error(err);
+      return;
+    }
+
+    if(isReschedule){
+      window.location.href = info.pageUrl;
+    } else {
+      heading.textContent = "Booking cancelled";
+      detailArea.innerHTML = '';
+      actionArea.innerHTML = '';
+      cancelConfirmBox.style.display = 'none';
+      statusMsg.textContent = "Your call has been cancelled. If you'd like to book another time, just use the original booking link again.";
+      statusMsg.className = 'msg success';
     }
   }
 
