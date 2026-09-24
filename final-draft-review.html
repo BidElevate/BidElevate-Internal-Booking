@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book your Final Draft Review Call — BidElevate</title>
+<title>Book your Draft Review Call — BidElevate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -14,7 +14,6 @@
   h1,h2,h3{font-family:'Lora', serif;margin:0;color:var(--green-deep);}
   .wrap{max-width:980px;margin:0 auto;padding:48px 24px 80px;}
   .brandbar{display:flex;align-items:center;gap:10px;margin-bottom:40px;}
-  .brandbar svg{width:30px;height:30px;flex-shrink:0;}
   .hero{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:start;}
   @media (max-width:760px){.hero{grid-template-columns:1fr;gap:36px;}}
   .eyebrow{font-size:12.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--green);font-weight:600;margin-bottom:14px;display:block;}
@@ -63,9 +62,9 @@
 
   <div class="hero">
     <div>
-      <span class="eyebrow">Final Draft Review Call</span>
-      <h1>Book your Final Draft Review Call</h1>
-      <p class="lead">An optional 60-minute call to go through the final draft together before it's submitted.</p>
+      <span class="eyebrow">Draft Review Call</span>
+      <h1>Book your Draft Review Call</h1>
+      <p class="lead">A 60-minute session to go through the current draft together, identify what needs strengthening, and agree next steps before the final version.</p>
 
       <div class="meta-row">
         <div class="meta-item">
@@ -102,14 +101,21 @@
             <input type="email" id="emailInput" placeholder="Email address">
             <textarea id="notesInput" placeholder="Anything you'd like us to cover on the call (optional)"></textarea>
           </div>
-          <button class="confirm-btn" id="confirmBtn">Confirm Final Draft Review Call</button>
+
+          <div class="step" id="guestsStep" style="margin-top:18px;">
+            <div class="step-label">Other invitees (optional, up to 3)</div>
+            <div id="guestRows"></div>
+            <button type="button" id="addGuestBtn" style="width:100%; padding:10px; border-radius:9px; border:1px dashed var(--sage); background:none; font-family:'DM Sans', sans-serif; font-size:13px; font-weight:600; color:var(--green); cursor:pointer;">+ Add another person</button>
+          </div>
+
+          <button class="confirm-btn" id="confirmBtn">Confirm Draft Review Call</button>
           <div class="footnote">You'll receive a calendar invite and confirmation email immediately.</div>
         </div>
       </div>
 
       <div class="confirmed" id="confirmedState">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <h2>Your Final Draft Review Call is confirmed</h2>
+        <h2>Your Draft Review Call is confirmed</h2>
         <p id="confirmSummary"></p>
         <p>Thank you for booking — we're looking forward to going through this with you.</p>
         <p id="manageLinkWrap" style="margin-top:14px; font-size:13px;"></p>
@@ -120,12 +126,12 @@
 
 <script>
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyaTN5enutD9yI72Pl1IVvEXToXpyM2efUdwnurv7f4PaP3fE68M35jYxNim3As7sgO/exec';
-  const CALL_TYPE = 'finalDraftReview';
+  const CALL_TYPE = 'draftReview';
 
   // ── EmailJS ──
   emailjs.init('ZxayBeLVQRYJoLquJ');
   const EMAILJS_SERVICE_ID  = 'service_yf3sg5y';
-  const EMAILJS_TEMPLATE_ID = 'template_wgm955h';
+  const EMAILJS_TEMPLATE_ID = 'template_qd75dwg';
 
   const params = new URLSearchParams(window.location.search);
   if(params.get('name')) document.getElementById('nameInput').value = params.get('name');
@@ -136,6 +142,38 @@
   const slotRow = document.getElementById('slotRow');
   const detailsStep = document.getElementById('detailsStep');
   const confirmBtn = document.getElementById('confirmBtn');
+
+  const MAX_GUESTS = 3;
+  const guestRows = document.getElementById('guestRows');
+  const addGuestBtn = document.getElementById('addGuestBtn');
+
+  function addGuestRow(){
+    if(guestRows.children.length >= MAX_GUESTS) return;
+    const row = document.createElement('div');
+    row.className = 'guest-row';
+    row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+    row.innerHTML = `
+      <input type="text" class="guest-name" placeholder="Full name" style="flex:1; padding:11px 13px; border:1px solid var(--sage); border-radius:9px; font-family:'DM Sans', sans-serif; font-size:14px; color:var(--ink); background:var(--sage-soft);">
+      <input type="email" class="guest-email" placeholder="Email address" style="flex:1; padding:11px 13px; border:1px solid var(--sage); border-radius:9px; font-family:'DM Sans', sans-serif; font-size:14px; color:var(--ink); background:var(--sage-soft);">
+      <button type="button" class="guest-remove" style="flex:0 0 auto; background:none; border:none; color:var(--ink-soft); font-size:20px; line-height:1; cursor:pointer; padding:4px 8px;">&times;</button>
+    `;
+    row.querySelector('.guest-remove').onclick = () => { row.remove(); updateAddGuestBtn(); };
+    guestRows.appendChild(row);
+    updateAddGuestBtn();
+  }
+
+  function updateAddGuestBtn(){
+    addGuestBtn.style.display = guestRows.children.length >= MAX_GUESTS ? 'none' : 'block';
+  }
+
+  function collectGuests(){
+    return Array.from(guestRows.querySelectorAll('.guest-row')).map(row => ({
+      name: row.querySelector('.guest-name').value.trim(),
+      email: row.querySelector('.guest-email').value.trim()
+    }));
+  }
+
+  addGuestBtn.onclick = addGuestRow;
 
   let availableDays = [];
   let selectedDayIdx = 0;
@@ -207,6 +245,14 @@
     if(!name || !email){ alert('Please add your name and email so we can confirm the call.'); return; }
     if(!selectedSlot){ alert('Please choose a time slot first.'); return; }
 
+    const guests = collectGuests();
+    const invalidGuest = guests.find(g => g.name && !g.email);
+    if(invalidGuest){
+      alert(`Please add an email address for ${invalidGuest.name}, or remove that row.`);
+      return;
+    }
+    const validGuests = guests.filter(g => g.email);
+
     const day = availableDays[selectedDayIdx];
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Confirming…';
@@ -215,14 +261,14 @@
       const res = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'book', callType: CALL_TYPE, date: day.date, time: selectedSlot, name, email, organisation, notes })
+        body: JSON.stringify({ action: 'book', callType: CALL_TYPE, date: day.date, time: selectedSlot, name, email, organisation, notes, guests: validGuests })
       });
       const data = await res.json();
 
       if(!data.success){
         alert(data.error || "That slot couldn't be booked — please choose another.");
         confirmBtn.disabled = false;
-        confirmBtn.textContent = 'Confirm Final Draft Review Call';
+        confirmBtn.textContent = 'Confirm Draft Review Call';
         loadAvailability();
         return;
       }
@@ -245,10 +291,23 @@
         reschedule_link: manageLink
       }).catch(err => console.error('EmailJS error:', err));
 
+      // ── Send the same branded confirmation to each extra invitee ──
+      validGuests.forEach(guest => {
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email:        guest.email,
+          name:            guest.name || 'there',
+          date:            data.dateLabel,
+          time:            time24To12(data.timeLabel),
+          meet_link:       data.meetLink || 'See your calendar invite',
+          cancel_link:     manageLink,
+          reschedule_link: manageLink
+        }).catch(err => console.error('EmailJS error (guest):', err));
+      });
+
     }catch(err){
       alert("Something went wrong confirming your call. Please try again.");
       confirmBtn.disabled = false;
-      confirmBtn.textContent = 'Confirm Final Draft Review Call';
+      confirmBtn.textContent = 'Confirm Draft Review Call';
       console.error(err);
     }
   };
