@@ -320,6 +320,13 @@
             <input type="url" id="tenderLinkInput" placeholder="Link to the tender (optional)">
             <textarea id="notesInput" placeholder="Anything else you'd like us to know before the call (optional)"></textarea>
           </div>
+
+          <div class="step" id="guestsStep" style="margin-top:18px;">
+            <div class="step-label">Other invitees (optional, up to 3)</div>
+            <div id="guestRows"></div>
+            <button type="button" id="addGuestBtn" style="width:100%; padding:10px; border-radius:9px; border:1px dashed var(--sage); background:none; font-family:'DM Sans', sans-serif; font-size:13px; font-weight:600; color:var(--green); cursor:pointer;">+ Add another person</button>
+          </div>
+
           <button class="confirm-btn" id="confirmBtn">Confirm Discovery Call</button>
           <div class="footnote">You'll receive a calendar invite and confirmation email immediately.</div>
         </div>
@@ -351,6 +358,38 @@
   const slotRow = document.getElementById('slotRow');
   const detailsStep = document.getElementById('detailsStep');
   const confirmBtn = document.getElementById('confirmBtn');
+
+  const MAX_GUESTS = 3;
+  const guestRows = document.getElementById('guestRows');
+  const addGuestBtn = document.getElementById('addGuestBtn');
+
+  function addGuestRow(){
+    if(guestRows.children.length >= MAX_GUESTS) return;
+    const row = document.createElement('div');
+    row.className = 'guest-row';
+    row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+    row.innerHTML = `
+      <input type="text" class="guest-name" placeholder="Full name" style="flex:1; padding:11px 13px; border:1px solid var(--sage); border-radius:9px; font-family:'DM Sans', sans-serif; font-size:14px; color:var(--ink); background:var(--sage-soft);">
+      <input type="email" class="guest-email" placeholder="Email address" style="flex:1; padding:11px 13px; border:1px solid var(--sage); border-radius:9px; font-family:'DM Sans', sans-serif; font-size:14px; color:var(--ink); background:var(--sage-soft);">
+      <button type="button" class="guest-remove" style="flex:0 0 auto; background:none; border:none; color:var(--ink-soft); font-size:20px; line-height:1; cursor:pointer; padding:4px 8px;">&times;</button>
+    `;
+    row.querySelector('.guest-remove').onclick = () => { row.remove(); updateAddGuestBtn(); };
+    guestRows.appendChild(row);
+    updateAddGuestBtn();
+  }
+
+  function updateAddGuestBtn(){
+    addGuestBtn.style.display = guestRows.children.length >= MAX_GUESTS ? 'none' : 'block';
+  }
+
+  function collectGuests(){
+    return Array.from(guestRows.querySelectorAll('.guest-row')).map(row => ({
+      name: row.querySelector('.guest-name').value.trim(),
+      email: row.querySelector('.guest-email').value.trim()
+    }));
+  }
+
+  addGuestBtn.onclick = addGuestRow;
 
   let availableDays = [];
   let selectedDayIdx = 0;
@@ -435,6 +474,14 @@
       return;
     }
 
+    const guests = collectGuests();
+    const invalidGuest = guests.find(g => g.name && !g.email);
+    if(invalidGuest){
+      alert(`Please add an email address for ${invalidGuest.name}, or remove that row.`);
+      return;
+    }
+    const validGuests = guests.filter(g => g.email);
+
     const day = availableDays[selectedDayIdx];
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Confirming…';
@@ -448,7 +495,7 @@
           callType: CALL_TYPE,
           date: day.date,
           time: selectedSlot,
-          name, email, organisation, service, tenderTitle, tenderLink, notes
+          name, email, organisation, service, tenderTitle, tenderLink, notes, guests: validGuests
         })
       });
       const data = await res.json();
@@ -478,6 +525,19 @@
         cancel_link:     manageLink,
         reschedule_link: manageLink
       }).catch(err => console.error('EmailJS error:', err));
+
+      // ── Send the same branded confirmation to each extra invitee ──
+      validGuests.forEach(guest => {
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email:        guest.email,
+          name:            guest.name || 'there',
+          date:            data.dateLabel,
+          time:            time24To12(data.timeLabel),
+          meet_link:       data.meetLink || 'See your calendar invite',
+          cancel_link:     manageLink,
+          reschedule_link: manageLink
+        }).catch(err => console.error('EmailJS error (guest):', err));
+      });
 
     }catch(err){
       alert("Something went wrong confirming your call. Please try again.");
