@@ -384,8 +384,40 @@
     return `${hour}:${String(m).padStart(2,'0')}${period}`;
   }
 
+  const LOADING_MESSAGES = [
+    "Hold tight — we're checking our live calendar so you only see times that are genuinely free…",
+    "Patience is a virtue (and so is a well-evidenced tender response) 😊",
+    "Fun fact: the CQC looks at five key questions — is a service safe, effective, caring, responsive and well-led?",
+    "Tip: a real example from your own service will always beat a general statement in a tender answer.",
+    "Almost there — we're lining up the next available times for you…",
+    "Did you know? Many domiciliary care tenders ask how you recruit, train and keep your care workers.",
+    "Fun fact: the Care Act 2014 put people's wellbeing at the heart of adult social care in England.",
+    "Tip: keep your policies, training records and latest CQC rating to hand — most tenders ask for them.",
+    "For SEND providers: the SEND Code of Practice (0–25) is the key guidance behind support for children and young people.",
+    "Thanks for waiting — we're double-checking nothing's double-booked.",
+    "Nearly there — good things take a moment…"
+  ];
+  let loadingInterval = null;
+
+  function startLoadingMessages(){
+    let i = 0;
+    dayRow.innerHTML = `<div class="loading-msg" style="font-size:13px; color:var(--ink-soft); padding:8px 0; transition:opacity .3s ease;">${LOADING_MESSAGES[0]}</div>`;
+    loadingInterval = setInterval(() => {
+      i = (i + 1) % LOADING_MESSAGES.length;
+      const el = dayRow.querySelector('.loading-msg');
+      if(el){
+        el.style.opacity = '0';
+        setTimeout(() => { el.textContent = LOADING_MESSAGES[i]; el.style.opacity = '1'; }, 300);
+      }
+    }, 2600);
+  }
+
+  function stopLoadingMessages(){
+    if(loadingInterval){ clearInterval(loadingInterval); loadingInterval = null; }
+  }
+
   async function loadAvailability(){
-    dayRow.innerHTML = '<div style="font-size:13px; color:var(--ink-soft); padding:8px 0;">Loading available days…</div>';
+    startLoadingMessages();
     slotRow.innerHTML = '';
     try{
       const res = await fetch(`${APPS_SCRIPT_URL}?action=availability&callType=${CALL_TYPE}&days=14`);
@@ -399,6 +431,8 @@
     }catch(err){
       dayRow.innerHTML = `<div style="font-size:13px; color:#b3554a;">Couldn't load availability right now. Please refresh, or contact us directly.</div>`;
       console.error(err);
+    } finally {
+      stopLoadingMessages();
     }
   }
 
