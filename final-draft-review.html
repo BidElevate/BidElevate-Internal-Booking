@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book your Draft Review Call — BidElevate</title>
+<title>Book your Final Draft Review Call — BidElevate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -14,6 +14,7 @@
   h1,h2,h3{font-family:'Lora', serif;margin:0;color:var(--green-deep);}
   .wrap{max-width:980px;margin:0 auto;padding:48px 24px 80px;}
   .brandbar{display:flex;align-items:center;gap:10px;margin-bottom:40px;}
+  .brandbar svg{width:30px;height:30px;flex-shrink:0;}
   .hero{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:start;}
   @media (max-width:760px){.hero{grid-template-columns:1fr;gap:36px;}}
   .eyebrow{font-size:12.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--green);font-weight:600;margin-bottom:14px;display:block;}
@@ -62,9 +63,9 @@
 
   <div class="hero">
     <div>
-      <span class="eyebrow">Draft Review Call</span>
-      <h1>Book your Draft Review Call</h1>
-      <p class="lead">A 60-minute session to go through the current draft together, identify what needs strengthening, and agree next steps before the final version.</p>
+      <span class="eyebrow">Final Draft Review Call</span>
+      <h1>Book your Final Draft Review Call</h1>
+      <p class="lead">An optional 60-minute call to go through the final draft together before it's submitted.</p>
 
       <div class="meta-row">
         <div class="meta-item">
@@ -108,14 +109,14 @@
             <button type="button" id="addGuestBtn" style="width:100%; padding:10px; border-radius:9px; border:1px dashed var(--sage); background:none; font-family:'DM Sans', sans-serif; font-size:13px; font-weight:600; color:var(--green); cursor:pointer;">+ Add another person</button>
           </div>
 
-          <button class="confirm-btn" id="confirmBtn">Confirm Draft Review Call</button>
+          <button class="confirm-btn" id="confirmBtn">Confirm Final Draft Review Call</button>
           <div class="footnote">You'll receive a calendar invite and confirmation email immediately.</div>
         </div>
       </div>
 
       <div class="confirmed" id="confirmedState">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <h2>Your Draft Review Call is confirmed</h2>
+        <h2>Your Final Draft Review Call is confirmed</h2>
         <p id="confirmSummary"></p>
         <p>Thank you for booking — we're looking forward to going through this with you.</p>
         <p id="manageLinkWrap" style="margin-top:14px; font-size:13px;"></p>
@@ -126,12 +127,12 @@
 
 <script>
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyaTN5enutD9yI72Pl1IVvEXToXpyM2efUdwnurv7f4PaP3fE68M35jYxNim3As7sgO/exec';
-  const CALL_TYPE = 'draftReview';
+  const CALL_TYPE = 'finalDraftReview';
 
   // ── EmailJS ──
   emailjs.init('ZxayBeLVQRYJoLquJ');
   const EMAILJS_SERVICE_ID  = 'service_yf3sg5y';
-  const EMAILJS_TEMPLATE_ID = 'template_qd75dwg';
+  const EMAILJS_TEMPLATE_ID = 'template_wgm955h';
 
   const params = new URLSearchParams(window.location.search);
   if(params.get('name')) document.getElementById('nameInput').value = params.get('name');
@@ -187,8 +188,40 @@
     return `${hour}:${String(m).padStart(2,'0')}${period}`;
   }
 
+  const LOADING_MESSAGES = [
+    "Hold tight — we're checking our live calendar so you only see times that are genuinely free…",
+    "Patience is a virtue (and so is a well-evidenced tender response) 😊",
+    "Fun fact: the CQC looks at five key questions — is a service safe, effective, caring, responsive and well-led?",
+    "Tip: a real example from your own service will always beat a general statement in a tender answer.",
+    "Almost there — we're lining up the next available times for you…",
+    "Did you know? Many domiciliary care tenders ask how you recruit, train and keep your care workers.",
+    "Fun fact: the Care Act 2014 put people's wellbeing at the heart of adult social care in England.",
+    "Tip: keep your policies, training records and latest CQC rating to hand — most tenders ask for them.",
+    "For SEND providers: the SEND Code of Practice (0–25) is the key guidance behind support for children and young people.",
+    "Thanks for waiting — we're double-checking nothing's double-booked.",
+    "Nearly there — good things take a moment…"
+  ];
+  let loadingInterval = null;
+
+  function startLoadingMessages(){
+    let i = 0;
+    dayRow.innerHTML = `<div class="loading-msg" style="font-size:13px; color:var(--ink-soft); padding:8px 0; transition:opacity .3s ease;">${LOADING_MESSAGES[0]}</div>`;
+    loadingInterval = setInterval(() => {
+      i = (i + 1) % LOADING_MESSAGES.length;
+      const el = dayRow.querySelector('.loading-msg');
+      if(el){
+        el.style.opacity = '0';
+        setTimeout(() => { el.textContent = LOADING_MESSAGES[i]; el.style.opacity = '1'; }, 300);
+      }
+    }, 2600);
+  }
+
+  function stopLoadingMessages(){
+    if(loadingInterval){ clearInterval(loadingInterval); loadingInterval = null; }
+  }
+
   async function loadAvailability(){
-    dayRow.innerHTML = '<div style="font-size:13px; color:var(--ink-soft); padding:8px 0;">Loading available days…</div>';
+    startLoadingMessages();
     slotRow.innerHTML = '';
     try{
       const res = await fetch(`${APPS_SCRIPT_URL}?action=availability&callType=${CALL_TYPE}&days=14`);
@@ -202,6 +235,8 @@
     }catch(err){
       dayRow.innerHTML = `<div style="font-size:13px; color:#b3554a;">Couldn't load availability right now. Please refresh, or contact us directly.</div>`;
       console.error(err);
+    } finally {
+      stopLoadingMessages();
     }
   }
 
@@ -268,7 +303,7 @@
       if(!data.success){
         alert(data.error || "That slot couldn't be booked — please choose another.");
         confirmBtn.disabled = false;
-        confirmBtn.textContent = 'Confirm Draft Review Call';
+        confirmBtn.textContent = 'Confirm Final Draft Review Call';
         loadAvailability();
         return;
       }
@@ -307,7 +342,7 @@
     }catch(err){
       alert("Something went wrong confirming your call. Please try again.");
       confirmBtn.disabled = false;
-      confirmBtn.textContent = 'Confirm Draft Review Call';
+      confirmBtn.textContent = 'Confirm Final Draft Review Call';
       console.error(err);
     }
   };
